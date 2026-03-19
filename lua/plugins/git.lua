@@ -74,24 +74,31 @@ return {
     end,
   },
 
-  -- Просмотр Git-лога и управление
+  -- LAZYGIT (вместо глючного neogit)
   {
-    "TimUntersberger/neogit",
-    cmd = "Neogit",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "sindrets/diffview.nvim", -- для просмотра diff
+    "kdheepak/lazygit.nvim",
+    lazy = true,
+    cmd = {
+      "LazyGit",
+      "LazyGitConfig",
+      "LazyGitCurrentFile",
+      "LazyGitFilter",
+      "LazyGitFilterCurrentFile",
+    },
+    keys = {
+      { "<leader>gg", "<Cmd>LazyGit<CR>", desc = "Open LazyGit" },
+      { "<leader>gl", "<Cmd>LazyGitFilter<CR>", desc = "LazyGit current file history" },
     },
     config = function()
-      require("neogit").setup({
-        integrations = {
-          diffview = true,
-        },
-      })
+      -- Настройки для floating window
+      vim.g.lazygit_floating_window_winblend = 0
+      vim.g.lazygit_floating_window_scaling_factor = 0.9
+      vim.g.lazygit_floating_window_corner_chars = { "╭", "╮", "╰", "╯" }
+      vim.g.lazygit_floating_window_border_chars = { "─", "│", "─", "│", "╭", "╮", "╰", "╯" }
+      
+      -- Дополнительные настройки
+      vim.g.lazygit_use_neovim_remote = 1
     end,
-    keys = {
-      { "<leader>gg", "<Cmd>Neogit<CR>", desc = "Open Neogit" },
-    },
   },
 
   -- Просмотр diff в удобном виде
@@ -103,7 +110,7 @@ return {
     },
   },
 
-  -- Поиск по Git-логу
+  -- Поиск по Git-логу через Telescope
   {
     "nvim-telescope/telescope.nvim",
     dependencies = {
@@ -116,8 +123,8 @@ return {
     keys = {
       { "<leader>gc", "<Cmd>Telescope git_commits<CR>", desc = "Git commits" },
       { "<leader>gb", "<Cmd>Telescope git_branches<CR>", desc = "Git branches" },
-      { "<leader>gs", "<Cmd>Telescope git_status<CR>", desc = "Git status" },
-      { "<leader>gS", "<Cmd>Telescope git_stash<CR>", desc = "Git stash" },
+      { "<leader>gss", "<Cmd>Telescope git_status<CR>", desc = "Git status" },
+      { "<leader>gst", "<Cmd>Telescope git_stash<CR>", desc = "Git stash" },
     },
   },
 }
