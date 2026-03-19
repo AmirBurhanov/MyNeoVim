@@ -47,7 +47,7 @@ vim.keymap.set('n', '<S-j>', '<C-w>j', { desc = "Перейти в нижнее 
 vim.keymap.set('n', '<S-k>', '<C-w>k', { desc = "Перейти в верхнее окно" })
 
 -- Запуск Java (F5)
-vim.keymap.set('n', '<F5>', function()
+vim.keymap.set('n', '<leader>cx', function()
   vim.cmd('w')
   
   -- Пробуем определить имя класса из текущего файла
@@ -87,28 +87,42 @@ require("lazy").setup({
 -- ========== АВТОКОМАНДЫ ==========
 
 -- Автокоманды для LSP
+-- Автокоманды для LSP (общие для всех языков)
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('UserLspConfig', {}),
   callback = function(ev)
     local opts = { buffer = ev.buf }
+    
+    -- Навигация
     vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+    
+    -- Сигнатура
     vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+    
+    -- Рабочая область
     vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
     vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
     vim.keymap.set('n', '<leader>wl', function()
       print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
     end, opts)
+    
+    -- Типы и рефакторинг
     vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, opts)
     vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-    vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
-    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-    vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format { async = true } end, opts)
+    
+    -- Форматирование
+    vim.keymap.set('n', '<leader>f', function() 
+      vim.lsp.buf.format { async = true } 
+    end, opts)
+    
+    -- ВАЖНО: УБИРАЕМ jdtls ОТСЮДА!
+    -- Код экшены для Java будут в ftplugin/java.lua
   end,
 })
-
 -- 👇 АВТОКОМАНДА ДЛЯ ПРОВОДНИКА (ЧТОБЫ l/h РАБОТАЛИ)
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "NvimTree",
@@ -128,5 +142,13 @@ vim.api.nvim_create_autocmd("FileType", {
       local api = require("nvim-tree.api")
       api.tree.collapse_all()
     end, { buffer = true, desc = "Свернуть всё" })
+  end,
+})
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*.java",
+  callback = function()
+    -- Форматируем через LSP перед сохранением
+    vim.lsp.buf.format({ async = false })
   end,
 })
