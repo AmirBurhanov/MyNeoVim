@@ -40,3 +40,37 @@ vim.keymap.set('n', '<leader>ci', function()
     apply = true 
   })
 end, opts)
+
+
+-- Тестирование для Java
+local opts = { buffer = true }
+
+-- Запуск теста под курсором
+vim.keymap.set('n', '<leader>tr', function()
+  require("neotest").run.run()
+end, opts)
+
+-- Запуск всех тестов в файле
+vim.keymap.set('n', '<leader>tR', function()
+  require("neotest").run.run(vim.fn.expand("%"))
+end, opts)
+
+-- Запуск последнего теста
+vim.keymap.set('n', '<leader>tl', function()
+  require("neotest").run.run_last()
+end, opts)
+
+-- Показать вывод теста
+vim.keymap.set('n', '<leader>to', function()
+  require("neotest").output.open()
+end, opts)
+
+-- Показать панель с результатами
+vim.keymap.set('n', '<leader>tp', function()
+  require("neotest").output_panel.toggle()
+end, opts)
+
+-- Отладка теста (если поставишь nvim-dap)
+vim.keymap.set('n', '<leader>td', function()
+  require("neotest").run.run({ strategy = "dap" })
+end, opts)
