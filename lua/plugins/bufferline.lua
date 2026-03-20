@@ -5,14 +5,15 @@ return {
     dependencies = {
       "nvim-tree/nvim-web-devicons",
     },
+    event = "VeryLazy",
     config = function()
       require("bufferline").setup({
         options = {
-          mode = "buffers",
-          numbers = "none",
-          close_command = "bdelete! %d",
-          right_mouse_command = "bdelete! %d",
-          left_mouse_command = "buffer %d",
+          mode = "buffers",           -- режим буферов (не табов)
+          numbers = "none",            -- не показывать номера
+          close_command = "bdelete! %d", -- команда закрытия
+          right_mouse_command = "bdelete! %d", -- закрыть по правой кнопке
+          left_mouse_command = "buffer %d", -- открыть по левой кнопке
           middle_mouse_command = nil,
           indicator = {
             icon = '▎',
@@ -30,6 +31,7 @@ return {
           diagnostics_indicator = function(count, level, diagnostics_dict, context)
             return "("..count..")"
           end,
+          -- Фильтруем специальные буферы (NvimTree, терминал)
           custom_filter = function(buf_number, buf_numbers)
             local buftype = vim.bo[buf_number].buftype
             if buftype == "terminal" or buftype == "quickfix" or buftype == "nofile" then
@@ -40,6 +42,7 @@ return {
             end
             return true
           end,
+          -- Отделяем проводник
           offsets = {
             {
               filetype = "NvimTree",
@@ -55,13 +58,25 @@ return {
           persist_buffer_sort = true,
           separator_style = "thin",
           enforce_regular_tabs = false,
-          always_show_bufferline = true,
+          always_show_bufferline = true, -- ВСЕГДА ПОКАЗЫВАТЬ (то что тебе нужно!)
+        },
+        highlights = {
+          separator = {
+            fg = "#434C5E",
+          },
+          buffer_selected = {
+            bold = true,
+            italic = false,
+          },
         },
       })
     end,
     keys = {
+      -- Навигация
       { "<Tab>", "<Cmd>BufferLineCycleNext<CR>", desc = "Next buffer" },
       { "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>", desc = "Prev buffer" },
+      
+      -- Переход по номерам
       { "<leader>1", "<Cmd>BufferLineGoToBuffer 1<CR>", desc = "Buffer 1" },
       { "<leader>2", "<Cmd>BufferLineGoToBuffer 2<CR>", desc = "Buffer 2" },
       { "<leader>3", "<Cmd>BufferLineGoToBuffer 3<CR>", desc = "Buffer 3" },
@@ -71,7 +86,19 @@ return {
       { "<leader>7", "<Cmd>BufferLineGoToBuffer 7<CR>", desc = "Buffer 7" },
       { "<leader>8", "<Cmd>BufferLineGoToBuffer 8<CR>", desc = "Buffer 8" },
       { "<leader>9", "<Cmd>BufferLineGoToBuffer 9<CR>", desc = "Buffer 9" },
+      
+      -- Управление закрытием (ТО ЧТО ТЫ ПРОСИЛ)
       { "<leader>bd", "<Cmd>BufferLinePickClose<CR>", desc = "Pick buffer to close" },
+      { "<leader>bD", "<Cmd>bdelete<CR>", desc = "Close current buffer" },
     },
-  }
+  },
+
+  -- Дополнительно: плагин для красивого закрытия буферов (опционально)
+  {
+    "famiu/bufdelete.nvim",
+    keys = {
+      { "<leader>bd", "<Cmd>Bdelete<CR>", desc = "Delete buffer" },
+      { "<leader>bD", "<Cmd>Bdelete!<CR>", desc = "Force delete buffer" },
+    },
+  },
 }
