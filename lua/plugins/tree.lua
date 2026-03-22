@@ -63,7 +63,7 @@ return {
           },
         },
 
-        -- ВАЖНО: скрываем файлы с точкой
+        -- Скрываем файлы с точкой по умолчанию
         filters = {
           dotfiles = true,        -- true = НЕ показывать файлы с точкой
           custom = {},
@@ -92,15 +92,22 @@ return {
       -- Настройка клавиш для проводника
       local api = require("nvim-tree.api")
       
-      -- Основные клавиши навигации
+      -- l - открыть файл/папку
       vim.keymap.set('n', 'l', api.node.open.edit, { buffer = true, desc = "Open file/folder" })
-      vim.keymap.set('n', 'h', api.node.navigate.parent_close, { buffer = true, desc = "Close folder" })
-      vim.keymap.set('n', 'H', api.tree.collapse_all, { buffer = true, desc = "Collapse all" })
       
-      -- Клавиша для переключения видимости скрытых файлов (нажми . в проводнике)
-      vim.keymap.set('n', '.', function()
-        local current = require("nvim-tree").get_filter().git_clean
-        require("nvim-tree").toggle_filter("dotfiles")
+      -- h - выйти из папки (назад)
+      vim.keymap.set('n', 'h', api.node.navigate.parent_close, { buffer = true, desc = "Go back" })
+      
+      -- H - переключить видимость скрытых файлов
+      vim.keymap.set('n', 'H', function()
+        local nvim_tree = require("nvim-tree")
+        local filters = nvim_tree.get_filter()
+        if filters.dotfiles then
+          nvim_tree.set_filter({ dotfiles = false })
+        else
+          nvim_tree.set_filter({ dotfiles = true })
+        end
+        nvim_tree.reload()
       end, { buffer = true, desc = "Toggle hidden files" })
     end,
   },
