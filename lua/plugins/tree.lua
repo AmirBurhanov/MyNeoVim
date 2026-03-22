@@ -26,7 +26,6 @@ return {
           side = "left",
           number = false,
           relativenumber = false,
-          -- Убираем mappings отсюда - их тут больше нет!
         },
 
         renderer = {
@@ -64,8 +63,9 @@ return {
           },
         },
 
+        -- ВАЖНО: скрываем файлы с точкой
         filters = {
-          dotfiles = true,
+          dotfiles = true,        -- true = НЕ показывать файлы с точкой
           custom = {},
         },
 
@@ -89,13 +89,19 @@ return {
         },
       })
 
-      -- 👇 А ТЕПЕРЬ ДЕЛАЕМ МАППИНГИ ПРЯМО В КОНФИГЕ (НОВЫЙ СПОСОБ)
+      -- Настройка клавиш для проводника
       local api = require("nvim-tree.api")
       
-      -- Переопределяем клавиши для nvim-tree
+      -- Основные клавиши навигации
       vim.keymap.set('n', 'l', api.node.open.edit, { buffer = true, desc = "Open file/folder" })
       vim.keymap.set('n', 'h', api.node.navigate.parent_close, { buffer = true, desc = "Close folder" })
       vim.keymap.set('n', 'H', api.tree.collapse_all, { buffer = true, desc = "Collapse all" })
+      
+      -- Клавиша для переключения видимости скрытых файлов (нажми . в проводнике)
+      vim.keymap.set('n', '.', function()
+        local current = require("nvim-tree").get_filter().git_clean
+        require("nvim-tree").toggle_filter("dotfiles")
+      end, { buffer = true, desc = "Toggle hidden files" })
     end,
   },
 }

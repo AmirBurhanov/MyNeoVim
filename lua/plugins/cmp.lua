@@ -11,20 +11,53 @@ return {
     lazy = false,
     config = function()
       local cmp = require("cmp")
+      local luasnip = require("luasnip")
+      
+      -- Настройка LuaSnip
+      luasnip.setup({
+        -- Выходить из сниппета, если курсор покинул его область
+        region_check_events = "CursorHold,InsertLeave",
+        -- Удалять сниппет, если его текст стёрли
+        delete_check_events = "TextChanged,InsertEnter",
+      })
+      
       cmp.setup({
         snippet = {
           expand = function(args)
-            require("luasnip").lsp_expand(args.body)
+            luasnip.lsp_expand(args.body)
           end,
         },
-        mapping = cmp.mapping.preset.insert({
+        mapping = {
+          -- Умный Tab: автодополнение → сниппет → обычный Tab
+          ["<Tab>"] = cmp.mapping(function(fallback)
+            -- Если меню автодополнения открыто
+            if cmp.visible() then
+              cmp.select_next_item()
+            -- Если можно перейти к следующему полю сниппета
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            -- Иначе вставляем обычный Tab
+            else
+              fallback()
+            end
+          end, { "i", "s" }), -- работает в insert и select режимах
+          
+          -- Shift+Tab для возврата к предыдущему полю
+          ["<S-Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+          
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
           ["<C-b>"] = cmp.mapping.scroll_docs(-4),
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<Tab>"] = cmp.mapping.select_next_item(),
-          ["<S-Tab>"] = cmp.mapping.select_prev_item(),
-        }),
+        },
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
           { name = "buffer" },

@@ -46,6 +46,14 @@ vim.keymap.set('n', '<S-l>', '<C-w>l', { desc = "Перейти в правое 
 vim.keymap.set('n', '<S-j>', '<C-w>j', { desc = "Перейти в нижнее окно" })
 vim.keymap.set('n', '<S-k>', '<C-w>k', { desc = "Перейти в верхнее окно" })
 
+--
+vim.keymap.set('n', '<leader>cf', ':botright split | terminal<CR>', { desc = "Open terminal at bottom" })
+--
+--
+--
+--
+--
+
 -- Запуск Java (F5)
 vim.keymap.set('n', '<leader>cx', function()
   vim.cmd('w')
@@ -99,7 +107,11 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-    
+    --
+    --
+
+
+
     -- Сигнатура
     vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
     
