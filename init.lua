@@ -32,7 +32,7 @@ vim.g.mapleader = " "
 -- Проводник (nvim-tree)
 vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = "Открыть/закрыть проводник" })
 vim.keymap.set('n', '<leader>f', ':NvimTreeFindFile<CR>', { desc = "Найти текущий файл в проводнике" })
-vim.keymap.set('n', '<leader>r', ':NvimTreeRefresh<CR>', { desc = "Обновить проводник" })
+vim.keymap.set('n', '<leader>R', ':NvimTreeRefresh<CR>', { desc = "Refresh tree" })
 vim.keymap.set('n', '<leader>E', ':NvimTreeToggle<CR>:NvimTreeExpandAll<CR>', { desc = "Открыть проводник и развернуть всё" })
 
 -- Поиск (Telescope)
@@ -164,3 +164,13 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     vim.lsp.buf.format({ async = false })
   end,
 })
+
+-- Перезапуск LSP (ручной)
+vim.keymap.set('n', '<leader>lr', function()
+  local clients = vim.lsp.get_active_clients()
+  for _, client in ipairs(clients) do
+    client.stop()
+  end
+  vim.cmd('e')
+  vim.notify("LSP clients restarted", vim.log.levels.INFO)
+end, { desc = "Restart LSP" })
