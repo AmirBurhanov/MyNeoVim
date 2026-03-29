@@ -12,7 +12,7 @@ end
 -- Для macOS
 local config_dir = mason_path .. "/config_mac"
 
--- Функция для определения корня проекта (улучшена)
+-- Функция для определения корня проекта
 local function get_project_root()
   local markers = { "pom.xml", "build.gradle", ".git", "mvnw", "gradlew" }
   local root = vim.fs.dirname(vim.fs.find(markers, { upward = true })[1])
@@ -27,6 +27,10 @@ end
 
 local project_root = get_project_root()
 local workspace_dir = vim.fn.stdpath("data") .. "/jdtls-workspace/" .. vim.fn.fnamemodify(project_root, ":t")
+
+-- ЗАГРУЖАЕМ НАСТРОЙКИ ИЗ ОТДЕЛЬНЫХ ФАЙЛОВ
+local java_imports = require("java-imports")
+local java_blacklist = require("java-blacklist")
 
 -- Конфигурация
 local config = {
@@ -50,32 +54,31 @@ local config = {
       signatureHelp = { enabled = true },
       contentProvider = { preferred = "fernflower" },
       completion = {
-        favoriteStaticMembers = {
-          -- JUnit
-          "org.junit.jupiter.api.Assertions.*",
-          "org.junit.jupiter.api.Assumptions.*",
-          -- Spring Test
-          "org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*",
-          "org.springframework.test.web.servlet.result.MockMvcResultMatchers.*",
-          -- Hamcrest
-          "org.hamcrest.Matchers.*",
-          "org.hamcrest.core.StringContains.*",
-          "org.hamcrest.CoreMatchers.*",
-          -- Mockito
-          "org.mockito.Mockito.*",
-          "org.mockito.ArgumentMatchers.*",
-          -- AssertJ
-          "org.assertj.core.api.Assertions.*",
-          -- Lombok
-          "lombok.*",
-        },
+        favoriteStaticMembers = java_imports.favoriteStaticMembers,
         staticCompletion = true,
         staticImportCompletion = true,
+        -- ИСКЛЮЧАЕМ НЕНУЖНЫЕ ТИПЫ (из blacklist)
+        filter = {
+          types = java_blacklist.excludedTypes,
+          packages = java_blacklist.excludedPackages,
+        },
+        -- ПРИОРИТЕТНЫЕ ТИПЫ (будут выше в списке)
+        importOrder = {
+          "java.util",  -- java.util в приоритете
+          "java.lang",
+          "java.io",
+          "java.nio",
+          "javax.*",
+          "org.springframework.*",
+          "org.junit.*",
+          "org.mockito.*",
+          "com.example.*",
+        },
       },
       sources = {
         organizeImports = {
           starThreshold = 9999,
-          staticStarThreshold = 9999
+          staticStarThreshold = 9999,
         }
       },
       codeGeneration = {
@@ -114,7 +117,6 @@ local config = {
       format = {
         enabled = true,
       },
-      -- Новая настройка: автоматическая организация импортов при сохранении
       saveActions = {
         organizeImports = true,
       },
@@ -133,18 +135,18 @@ vim.keymap.set('n', '<leader>ci', function()
   vim.lsp.buf.code_action({ context = { only = { "source.organizeImports" } }, apply = true })
 end, opts)
 
--- Дополнительные полезные клавиши
+-- Рефакторинги
 vim.keymap.set('v', '<leader>ce', function()
   jdtls.extract_variable()
-end, opts, { desc = "Extract variable" })
+end, opts)
 
 vim.keymap.set('v', '<leader>cm', function()
   jdtls.extract_method()
-end, opts, { desc = "Extract method" })
+end, opts)
 
 vim.keymap.set('n', '<leader>gt', function()
   jdtls.test_nearest_method()
-end, opts, { desc = "Run nearest test" })
+end, opts)
 
 -- Тестирование
 vim.keymap.set('n', '<leader>tr', function() require("neotest").run.run() end, opts)
@@ -153,15 +155,12 @@ vim.keymap.set('n', '<leader>tl', function() require("neotest").run.run_last() e
 vim.keymap.set('n', '<leader>to', function() require("neotest").output.open() end, opts)
 vim.keymap.set('n', '<leader>tp', function() require("neotest").output_panel.toggle() end, opts)
 
--- Авто-обновление с защитой от ошибок
+-- Авто-обновление
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.java",
   callback = function()
     vim.defer_fn(function()
-      local success, err = pcall(vim.lsp.buf.execute_command, { command = "java.project.updateSettings", arguments = {} })
-      if not success then
-        vim.notify("JDTLS update skipped: " .. tostring(err), vim.log.levels.WARN)
-      end
+      pcall(vim.lsp.buf.execute_command, { command = "java.project.updateSettings", arguments = {} })
     end, 2000)
   end,
 })
@@ -176,4 +175,4 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   end,
 })
 
-vim.notify("✅ Java LSP loaded with full Spring support", vim.log.levels.INFO)
+vim.notify("✅ Java LSP loaded with blacklist support", vim.log.levels.INFO)
