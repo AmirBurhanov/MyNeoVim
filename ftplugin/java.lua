@@ -1,4 +1,3 @@
--- Java LSP настройка
 local jdtls = require("jdtls")
 local mason_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
 
@@ -28,9 +27,9 @@ end
 local project_root = get_project_root()
 local workspace_dir = vim.fn.stdpath("data") .. "/jdtls-workspace/" .. vim.fn.fnamemodify(project_root, ":t")
 
--- ЗАГРУЖАЕМ НАСТРОЙКИ ИЗ ОТДЕЛЬНЫХ ФАЙЛОВ
-local java_imports = require("java-imports")
-local java_blacklist = require("java-blacklist")
+-- Загружаем настройки (если есть)
+local ok_imports, java_imports = pcall(require, "java-imports")
+local ok_blacklist, java_blacklist = pcall(require, "java-blacklist")
 
 -- Конфигурация
 local config = {
@@ -54,17 +53,11 @@ local config = {
       signatureHelp = { enabled = true },
       contentProvider = { preferred = "fernflower" },
       completion = {
-        favoriteStaticMembers = java_imports.favoriteStaticMembers,
+        favoriteStaticMembers = ok_imports and java_imports.favoriteStaticMembers or {},
         staticCompletion = true,
         staticImportCompletion = true,
-        -- ИСКЛЮЧАЕМ НЕНУЖНЫЕ ТИПЫ (из blacklist)
-        filter = {
-          types = java_blacklist.excludedTypes,
-          packages = java_blacklist.excludedPackages,
-        },
-        -- ПРИОРИТЕТНЫЕ ТИПЫ (будут выше в списке)
         importOrder = {
-          "java.util",  -- java.util в приоритете
+          "java.util",
           "java.lang",
           "java.io",
           "java.nio",
@@ -72,7 +65,6 @@ local config = {
           "org.springframework.*",
           "org.junit.*",
           "org.mockito.*",
-          "com.example.*",
         },
       },
       sources = {
@@ -96,21 +88,16 @@ local config = {
           },
         },
       },
+      -- ОТКЛЮЧАЕМ ЗАГРУЗКУ ИСХОДНИКОВ (для скорости)
       maven = {
-        downloadSources = true,
-      },
-      eclipse = {
-        downloadSources = true,
+        downloadSources = false,
       },
       import = {
         maven = {
           enabled = true,
-          disableTestClasspathFlag = false,
-        },
-        gradle = {
-          enabled = false,
         },
       },
+      -- ОСТАВЛЯЕМ ДЕКОМПИЛЯЦИЮ (полезно)
       references = {
         includeDecompiledSources = true,
       },
@@ -137,15 +124,15 @@ end, opts)
 
 -- Рефакторинги
 vim.keymap.set('v', '<leader>ce', function()
-  jdtls.extract_variable()
+  if jdtls.extract_variable then jdtls.extract_variable() end
 end, opts)
 
 vim.keymap.set('v', '<leader>cm', function()
-  jdtls.extract_method()
+  if jdtls.extract_method then jdtls.extract_method() end
 end, opts)
 
 vim.keymap.set('n', '<leader>gt', function()
-  jdtls.test_nearest_method()
+  if jdtls.test_nearest_method then jdtls.test_nearest_method() end
 end, opts)
 
 -- Тестирование
@@ -155,16 +142,7 @@ vim.keymap.set('n', '<leader>tl', function() require("neotest").run.run_last() e
 vim.keymap.set('n', '<leader>to', function() require("neotest").output.open() end, opts)
 vim.keymap.set('n', '<leader>tp', function() require("neotest").output_panel.toggle() end, opts)
 
--- Авто-обновление
-vim.api.nvim_create_autocmd("BufEnter", {
-  pattern = "*.java",
-  callback = function()
-    vim.defer_fn(function()
-      pcall(vim.lsp.buf.execute_command, { command = "java.project.updateSettings", arguments = {} })
-    end, 2000)
-  end,
-})
-
+-- Обновление только при изменении pom.xml
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = { "pom.xml", "build.gradle" },
   callback = function()
@@ -175,4 +153,4 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   end,
 })
 
-vim.notify("✅ Java LSP loaded with blacklist support", vim.log.levels.INFO)
+vim.notify("✅ Java LSP loaded (optimized)", vim.log.levels.INFO)

@@ -7,7 +7,7 @@ return {
       local status_ok, treesitter = pcall(require, "nvim-treesitter.configs")
       if status_ok then
         treesitter.setup({
-          ensure_installed = { "java", "lua" },
+          ensure_installed = { "java", "lua", "sql" },
           highlight = { enable = true },
           indent = { enable = true },
         })

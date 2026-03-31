@@ -1,61 +1,21 @@
 return {
-  {
-    "catppuccin/nvim",
-    name = "catppuccin",
-    priority = 1000,  -- загружается раньше других плагинов
+    "ellisonleao/gruvbox.nvim",
+    priority = 1000,
     config = function()
-      require("catppuccin").setup({
-        flavour = "mocha", -- mocha - самый тёмный, macchiato - чуть светлее
-        background = {
-          light = "latte",
-          dark = "mocha",
-        },
-        transparent_background = false, -- true если хочешь прозрачный фон
-        term_colors = true,
-        styles = {
-          comments = { "italic" },      -- комментарии курсивом
-          conditionals = { "italic" },
-          loops = {},
-          functions = { "bold" },       -- функции жирным
-          keywords = { "bold" },        -- ключевые слова жирным
-          strings = {},
-          variables = {},
-          numbers = {},
-          booleans = { "bold" },
-          properties = {},
-          types = { "bold" },
-          operators = {},
-        },
-        integrations = {
-          telescope = true,
-          nvimtree = true,
-          lsp_trouble = true,
-          gitsigns = true,
-          which_key = true,
-          treesitter = true,
-          cmp = true,
-          mason = true,
-          -- для Java
-          native_lsp = {
-            enabled = true,
-            virtual_text = {
-              errors = { "italic" },
-              hints = { "italic" },
-              warnings = { "italic" },
-              information = { "italic" },
+        require("gruvbox").setup({
+            terminal_colors = true,
+            undercurl = true,
+            underline = true,
+            bold = true,
+            italic = {
+                strings = true,
+                comments = true,
+                operators = false,
+                folds = true,
             },
-            underlines = {
-              errors = { "underline" },
-              hints = { "underline" },
-              warnings = { "underline" },
-              information = { "underline" },
-            },
-          },
-        },
-      })
-      
-      -- Устанавливаем тему
-      vim.cmd.colorscheme("catppuccin")
+            contrast = "",
+            transparent_mode = false,
+        })
+        vim.cmd("colorscheme gruvbox")
     end,
-  },
 }

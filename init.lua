@@ -12,6 +12,10 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Добавляем Mason bin в PATH (чтобы работали LSP серверы)
+local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
+vim.env.PATH = mason_bin .. ":" .. vim.env.PATH
+
 -- Базовые настройки редактора
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -46,22 +50,17 @@ vim.keymap.set('n', '<S-l>', '<C-w>l', { desc = "Перейти в правое 
 vim.keymap.set('n', '<S-j>', '<C-w>j', { desc = "Перейти в нижнее окно" })
 vim.keymap.set('n', '<S-k>', '<C-w>k', { desc = "Перейти в верхнее окно" })
 
---
+-- Терминал
 vim.keymap.set('n', '<leader>cf', ':botright split | terminal<CR>', { desc = "Open terminal at bottom" })
---
---
---
---
---
 
--- Запуск Java (F5)
+-- Запуск Java
 vim.keymap.set('n', '<leader>cx', function()
   vim.cmd('w')
-  
+
   -- Пробуем определить имя класса из текущего файла
   local filename = vim.fn.expand('%:t:r')
   local package = ""
-  
+
   -- Ищем package в файле
   for line in io.lines(vim.fn.expand('%')) do
     local pkg = line:match("package%s+([^;]+)")
@@ -70,13 +69,13 @@ vim.keymap.set('n', '<leader>cx', function()
       break
     end
   end
-  
+
   local full_class = package .. filename
-  
+
   local pom = io.open("pom.xml", "r")
   if pom then
     pom:close()
-    
+
     -- Спрашиваем, но предлагаем угаданное имя
     local class_name = vim.fn.input("Main class [" .. full_class .. "]: ", full_class)
     if class_name and class_name ~= "" then
@@ -94,47 +93,40 @@ require("lazy").setup({
 
 -- ========== АВТОКОМАНДЫ ==========
 
--- Автокоманды для LSP
 -- Автокоманды для LSP (общие для всех языков)
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('UserLspConfig', {}),
   callback = function(ev)
     local opts = { buffer = ev.buf }
-    
+
     -- Навигация
     vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-    --
-    --
-
-
 
     -- Сигнатура
     vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-    
+
     -- Рабочая область
     vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
     vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
     vim.keymap.set('n', '<leader>wl', function()
       print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
     end, opts)
-    
+
     -- Типы и рефакторинг
     vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, opts)
     vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-    
+
     -- Форматирование
-    vim.keymap.set('n', '<leader>f', function() 
-      vim.lsp.buf.format { async = true } 
+    vim.keymap.set('n', '<leader>f', function()
+      vim.lsp.buf.format { async = true }
     end, opts)
-    
-    -- ВАЖНО: УБИРАЕМ jdtls ОТСЮДА!
-    -- Код экшены для Java будут в ftplugin/java.lua
   end,
 })
+
 -- 👇 АВТОКОМАНДА ДЛЯ ПРОВОДНИКА (ЧТОБЫ l/h РАБОТАЛИ)
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "NvimTree",
@@ -144,12 +136,12 @@ vim.api.nvim_create_autocmd("FileType", {
       local api = require("nvim-tree.api")
       api.node.open.edit()
     end, { buffer = true, desc = "Открыть файл/папку" })
-    
+
     vim.keymap.set('n', 'h', function()
       local api = require("nvim-tree.api")
       api.node.navigate.parent_close()
     end, { buffer = true, desc = "Свернуть папку" })
-    
+
     vim.keymap.set('n', 'H', function()
       local api = require("nvim-tree.api")
       api.tree.collapse_all()
@@ -157,17 +149,17 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- Автоформатирование Java при сохранении
 vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = "*.java",
   callback = function()
-    -- Форматируем через LSP перед сохранением
     vim.lsp.buf.format({ async = false })
   end,
 })
 
 -- Перезапуск LSP (ручной)
 vim.keymap.set('n', '<leader>lr', function()
-  local clients = vim.lsp.get_active_clients()
+  local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
     client.stop()
   end
